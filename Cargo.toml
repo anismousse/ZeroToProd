@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 rocket = "0.5.0-rc.2"
 
+[dev-dependencies]
+reqwest = "0.11"
+
 [lib]
 name = "zero2prod"
 path = "src/lib.rs"

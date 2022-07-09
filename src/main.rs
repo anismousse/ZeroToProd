@@ -1,8 +1,15 @@
 extern crate rocket;
-use zero2prod::startup;
+use zero2prod::{build_rocket_config, startup};
 
 #[rocket::main]
-async fn main() -> Result<(), rocket::Error> {
-    let _ = startup().launch().await?;
-    Ok(())
+#[allow(unused_must_use)]
+async fn main() {
+    // Building configuration object for Rocket
+    let config = build_rocket_config();
+
+    // launch Rocket
+    startup(&config)
+        .expect("Failed to bind address")
+        .launch()
+        .await;
 }

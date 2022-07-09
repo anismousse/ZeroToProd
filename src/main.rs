@@ -3,6 +3,6 @@ use zero2prod::startup;
 
 #[rocket::main]
 #[allow(unused_must_use)]
-async fn main()  {
+async fn main() {
     startup().launch().await;
 }

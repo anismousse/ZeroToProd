@@ -24,8 +24,7 @@ async fn health_check() {
     let url = format!("{}/health_check", &address_port);
     // let err_msg = "Can not execute the request";
 
-    let response = client.get(url).send().await.unwrap();
-    //.expect(err_msg);
+    let response = client.get(url).send().await.expect(err_msg);
 
     assert!(response.status().is_success());
     assert_eq!(response.content_length(), Some(0));

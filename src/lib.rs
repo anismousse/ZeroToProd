@@ -12,13 +12,18 @@ async fn health_check() -> Status {
     Status::Ok
 }
 
+#[get("/subscriptions")]
+async fn subscriptions() -> Status {
+    Status::Ok
+}
+
 pub fn startup(config: &rocket::Config) -> Result<Rocket<Build>, std::io::Error> {
-    let server = rocket::custom(config).mount("/", routes![health_check]);
+    let server = rocket::custom(config).mount("/", routes![health_check, subscriptions]);
     Ok(server)
 }
 
 pub fn startup_default() -> Rocket<Build> {
-    rocket::build().mount("/", routes![health_check])
+    rocket::build().mount("/", routes![health_check, subscriptions])
 }
 
 pub fn build_rocket_config() -> rocket::Config {

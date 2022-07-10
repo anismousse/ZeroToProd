@@ -1,22 +1,44 @@
+use std::vec;
+
+use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
-use zero2prod::{build_rocket_config, startup, startup_default};
+use zero2prod::startup_default;
 
 #[test]
-fn subscriptions_rocket_test() {
+fn test_subscriptions_with_valid_form_data_rocket_test() {
     let client = Client::tracked(startup_default()).unwrap();
     let body = "name=Akin%20Mousse&email=anismousse%40gmail.com";
-    let response = client.get("/subscriptions").body(body).dispatch();
+    let response = client
+        .post("/subscriptions")
+        .header(ContentType::Form)
+        .body(body)
+        .dispatch();
     assert_eq!(response.status(), Status::Ok);
 }
 
 #[test]
-fn subscriptions_test() {
-    let config = build_rocket_config();
-    let body = "name=Akin%20Mousse&email=anismousse%40gmail.com";
-    let client = Client::tracked(startup(&config).unwrap()).unwrap();
+fn test_subscriptions_with_invalid_form_data_rocket_test() {
+    let client = Client::tracked(startup_default()).unwrap();
+    let test_cases = vec![
+        ("missing email", "name=Akin%20Mousse"),
+        ("missing name", "email=anismousse%40gmail.com"),
+        ("missing name and email", ""),
+        ("an incorrect email", "email=anismousse%40gm%40gmail.com"),
+    ];
 
-    // Test for the health_check endpoint
-    let response = client.get("/subscriptions").body(body).dispatch();
-    assert_eq!(response.status(), Status::Ok);
+    for (err_msg, incorrect_body) in test_cases {
+        let response = client
+            .post("/subscriptions")
+            .header(ContentType::Form)
+            .body(&incorrect_body)
+            .dispatch();
+
+        assert_eq!(
+            response.status(),
+            Status::UnprocessableEntity,
+            "The API did not fail with 422 despite {} in the payload.",
+            err_msg
+        );
+    };    
 }

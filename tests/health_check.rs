@@ -22,7 +22,7 @@ async fn health_check() {
     let client = reqwest::Client::new();
 
     let url = format!("{}/health_check", &address_port);
-    // let err_msg = "Can not execute the request";
+    let err_msg = "Can not execute the request";
 
     let response = client.get(url).send().await.expect(err_msg);
 

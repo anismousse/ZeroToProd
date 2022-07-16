@@ -3,11 +3,20 @@ use std::vec;
 use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
-use zero2prod::startup_default;
+use zero2prod::configuration::get_configuration;
+use zero2prod::{build_rocket_config, startup};
+
+fn get_rocket_client() -> Client {
+    let configuration = get_configuration().expect("Fail to load the configuration");
+    // Building configuration object for Rocket
+    let config = build_rocket_config(Some(configuration.application_port));
+
+    Client::tracked(startup(&config).expect("Failed to bind address")).unwrap()
+}
 
 #[test]
 fn test_subscriptions_with_valid_form_data_rocket_test() {
-    let client = Client::tracked(startup_default()).unwrap();
+    let client = get_rocket_client();
     let body = "name=Akin%20Mousse&email=anismousse%40gmail.com";
     let response = client
         .post("/subscriptions")
@@ -19,7 +28,7 @@ fn test_subscriptions_with_valid_form_data_rocket_test() {
 
 #[test]
 fn test_subscriptions_with_invalid_form_data_rocket_test() {
-    let client = Client::tracked(startup_default()).unwrap();
+    let client = get_rocket_client();
     let test_cases = vec![
         ("missing email", "name=Akin%20Mousse"),
         ("missing name", "email=anismousse%40gmail.com"),

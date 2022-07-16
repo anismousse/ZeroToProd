@@ -40,5 +40,5 @@ fn test_subscriptions_with_invalid_form_data_rocket_test() {
             "The API did not fail with 422 despite {} in the payload.",
             err_msg
         );
-    };    
+    }
 }

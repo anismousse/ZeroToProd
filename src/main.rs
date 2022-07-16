@@ -1,6 +1,6 @@
 extern crate rocket;
-use zero2prod::{build_rocket_config, startup};
 use zero2prod::configuration::get_configuration;
+use zero2prod::{build_rocket_config, startup};
 
 #[rocket::main]
 #[allow(unused_must_use)]

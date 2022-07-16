@@ -57,12 +57,10 @@ pub fn build_rocket_config(port_input: Option<u16>) -> rocket::Config {
     // Get available port
     let port = match port_input {
         Some(value) => value,
-        None => {
-            match TcpListener::bind("127.0.0.1:0") {
-                Ok(listener) => listener.local_addr().unwrap().port(),
-                Err(_) => panic!("No port available"),
-            }
-        }
+        None => match TcpListener::bind("127.0.0.1:0") {
+            Ok(listener) => listener.local_addr().unwrap().port(),
+            Err(_) => panic!("No port available"),
+        },
     };
     // let port = match TcpListener::bind("127.0.0.1:0") {
     //     Ok(listener) => listener.local_addr().unwrap().port(),

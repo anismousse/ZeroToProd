@@ -8,9 +8,22 @@ edition = "2021"
 [dependencies]
 rocket = "0.5.0-rc.2"
 regex = "1.6.0"
+[dependencies.sqlx]
+version = "0.6"
+default-features = false
+features = [
+  "runtime-tokio-native-tls",
+  "macros",
+  "postgres",
+  "uuid",
+  "chrono",
+  "migrate"
+]
+
 
 [dev-dependencies]
 reqwest = "0.11"
+
 
 [lib]
 name = "zero2prod"

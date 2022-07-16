@@ -16,7 +16,7 @@ struct Subscriber<'r> {
     name: &'r str,
     #[field(validate = omits("no"))]
     #[field(validate = validate_email())]
-    email: &'r str,
+    email: String,
 }
 
 fn validate_email<'v>(email: &str) -> form::Result<'v, ()> {

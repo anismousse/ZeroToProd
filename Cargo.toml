@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 rocket = "0.5.0-rc.2"
 regex = "1.6.0"
+config = "0.13"
+serde = "1.0.139"
+
 [dependencies.sqlx]
 version = "0.6"
 default-features = false

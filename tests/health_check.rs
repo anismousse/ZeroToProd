@@ -18,7 +18,7 @@ fn health_check_rocket_test() {
 
 #[test]
 fn health_check_test() {
-    let config = build_rocket_config();
+    let config = build_rocket_config(None);
 
     let client = Client::tracked(startup(&config).unwrap()).unwrap();
 

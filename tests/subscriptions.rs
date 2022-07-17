@@ -2,33 +2,49 @@ use std::vec;
 
 use rocket::http::ContentType;
 use rocket::http::Status;
-use rocket::local::blocking::Client;
+// use rocket::local::blocking::Client;
+use rocket::local::asynchronous::Client;
 use zero2prod::configuration::get_configuration;
+use zero2prod::configuration::Settings;
 use zero2prod::{build_rocket_config, startup};
 
-fn get_rocket_client() -> Client {
-    let configuration = get_configuration().expect("Fail to load the configuration");
+async fn get_rocket_client(configuration: Settings) -> Client {
     // Building configuration object for Rocket
     let config = build_rocket_config(Some(configuration.application_port));
 
-    Client::tracked(startup(&config).expect("Failed to bind address")).unwrap()
+    Client::tracked(startup(&config).unwrap()).await.unwrap()
 }
 
-#[test]
-fn test_subscriptions_with_valid_form_data_rocket_test() {
-    let client = get_rocket_client();
+
+//#[rocket::tokio::test]
+#[tokio::test]
+async fn test_subscriptions_with_valid_form_data_rocket_test() {
+    let configuration = get_configuration().expect("Fail to load the configuration");
+    let client = get_rocket_client(configuration);
     let body = "name=Akin%20Mousse&email=anismousse%40gmail.com";
-    let response = client
+    let cl = client.await;
+    let response = cl
         .post("/subscriptions")
         .header(ContentType::Form)
         .body(body)
         .dispatch();
-    assert_eq!(response.status(), Status::Ok);
+    assert_eq!(response.await.status(), Status::Ok);
+    assert!(true);
+
+    // // checks that the users is in the database
+    // let mut saved = sqlx::query("select email, name from  subscriptions")
+    //     .fetch_one(executor)
+    //     .await
+    //     .expect("Failed to fetch saved subscribers.");
+    // assert_eq!(saved.email, "Akin Mousse");
+    // assert_eq!(saved.email, "anismousse@gmail.com");
 }
 
-#[test]
-fn test_subscriptions_with_invalid_form_data_rocket_test() {
-    let client = get_rocket_client();
+#[tokio::test]
+async fn test_subscriptions_with_invalid_form_data_rocket_test() {
+    let configuration = get_configuration().expect("Fail to load the configuration");
+    let client = get_rocket_client(configuration);
+    let cl = client.await;
     let test_cases = vec![
         ("missing email", "name=Akin%20Mousse"),
         ("missing name", "email=anismousse%40gmail.com"),
@@ -37,14 +53,14 @@ fn test_subscriptions_with_invalid_form_data_rocket_test() {
     ];
 
     for (err_msg, incorrect_body) in test_cases {
-        let response = client
+        let response = cl
             .post("/subscriptions")
             .header(ContentType::Form)
             .body(&incorrect_body)
             .dispatch();
 
         assert_eq!(
-            response.status(),
+            response.await.status(),
             Status::UnprocessableEntity,
             "The API did not fail with 422 despite {} in the payload.",
             err_msg

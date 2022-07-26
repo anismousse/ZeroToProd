@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -x
 
 #  bash to immediately exit if any command [1] has a non-zero exit status and prevents errors in a pipeline from being masked

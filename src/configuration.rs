@@ -11,7 +11,7 @@ pub struct DatabaseSettings {
     pub username: String,
     pub password: String,
     pub database_name: String,
-    pub port: String,
+    pub port: u16,
     pub host: String,
 }
 
@@ -25,7 +25,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 impl DatabaseSettings {
     pub fn connection_string(&self) -> String {
         format!(
-            "postgres://${}:${}@localhost:${}/${}",
+            "postgres://{}:{}@localhost:{}/{}",
             self.username, self.password, self.port, self.database_name
         )
     }

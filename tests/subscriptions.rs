@@ -2,8 +2,8 @@ use std::vec;
 
 use rocket::http::ContentType;
 use rocket::http::Status;
-use sqlx::{PgConnection, Connection};
 use rocket::local::asynchronous::Client;
+use sqlx::{Connection, PgConnection};
 use zero2prod::configuration::get_configuration;
 use zero2prod::configuration::Settings;
 use zero2prod::{build_rocket_config, startup};
@@ -14,7 +14,6 @@ async fn spawn_rocket_client(configuration: &Settings) -> Client {
 
     Client::tracked(startup(&config).unwrap()).await.unwrap()
 }
-
 
 //#[rocket::tokio::test]
 #[tokio::test]
@@ -37,9 +36,9 @@ async fn test_subscriptions_with_valid_form_data_rocket_test() {
         .header(ContentType::Form)
         .body(body)
         .dispatch();
-    
+
     assert_eq!(response.await.status(), Status::Ok);
-    
+
     // checks that the users is in the database
     let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
         .fetch_one(&mut connection)

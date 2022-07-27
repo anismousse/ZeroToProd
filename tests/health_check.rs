@@ -30,25 +30,3 @@ fn health_check_test() {
     let response = client.get("/toto").dispatch();
     assert_eq!(response.status(), Status::NotFound);
 }
-
-// #[tokio::test]
-// async fn health_check() {
-//     let address_port = spawn_app();
-//     let client = reqwest::Client::new();
-
-//     let url = format!("{}/health_check", &address_port);
-//     let err_msg = "Can not execute the request";
-
-//     let response = client.get(url).send().await.expect(err_msg);
-
-//     assert!(response.status().is_success());
-//     assert_eq!(response.content_length(), Some(0));
-// }
-
-// fn spawn_app() -> String {
-//     // Building configuration object for Rocket
-//     let config = build_rocket_config();
-//     let server = startup(&config).expect("Failed to bind address");
-//     let _ = tokio::spawn(server.launch());
-//     format!("http://{}:{}", config.address, &config.port.to_string())
-// }

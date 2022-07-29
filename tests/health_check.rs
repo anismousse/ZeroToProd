@@ -1,7 +1,7 @@
 use rocket::http::Status;
 use rocket::local::blocking::Client;
 // use rocket::tokio;
-use zero2prod::{build_rocket_config, startup, startup_default};
+use zero2prod::startup::{build_rocket_config, startup, startup_default};
 
 #[test]
 fn health_check_rocket_test() {

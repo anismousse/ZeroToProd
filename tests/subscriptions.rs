@@ -6,7 +6,7 @@ use rocket::local::asynchronous::Client;
 use sqlx::{Connection, PgConnection};
 use zero2prod::configuration::get_configuration;
 use zero2prod::configuration::Settings;
-use zero2prod::{build_rocket_config, startup};
+use zero2prod::startup::{build_rocket_config, startup};
 
 async fn spawn_rocket_client(configuration: &Settings) -> Client {
     // Building configuration object for Rocket

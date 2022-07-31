@@ -12,6 +12,15 @@ config = "0.13"
 serde = "1.0.139"
 tokio = { version = "1", features = ["full"] }
 dotenv_codegen = "0.15.0"
+chrono = "0.4"
+
+[dependencies.uuid]
+version = "1.1.2"
+features = [
+    "v4",                
+    "fast-rng",          
+    "macro-diagnostics", 
+]
 
 [dependencies.rocket_db_pools]
 version = "0.1.0-rc.2"
@@ -28,6 +37,7 @@ features = [
   "chrono",
   "migrate"
 ]
+
 
 
 [dev-dependencies]

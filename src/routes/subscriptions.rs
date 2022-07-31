@@ -1,6 +1,12 @@
+use rocket::form::{self, Error, Form};
+use rocket::http::Status;
+use rocket_db_pools::{sqlx, Connection};
+
+use chrono::Utc;
 use regex::Regex;
-use rocket::form::Form;
-use rocket::form::{self, Error};
+use uuid::Uuid;
+
+use crate::startup::Newsletter;
 
 #[derive(FromForm)]
 pub struct Subscriber<'r> {
@@ -23,6 +29,23 @@ fn validate_email<'v>(email: &str) -> form::Result<'v, ()> {
 }
 
 #[post("/subscriptions", data = "<subscriber>")]
-pub fn subscriptions(subscriber: Form<Subscriber<'_>>) -> String {
-    format!(" {} - {}", subscriber.name, subscriber.email)
+pub async fn subscriptions(
+    mut db: Connection<Newsletter>,
+    subscriber: Form<Subscriber<'_>>,
+) -> Status {
+    let sql_query = format!(
+        r#"
+    INSERT INTO subscriptions (id, email, name, subscribed_at)
+    VALUES ('{}', '{}', '{}', '{}')
+    "#,
+        Uuid::new_v4(),
+        subscriber.email,
+        subscriber.name,
+        Utc::now()
+    );
+    sqlx::query(&sql_query)
+        .execute(&mut *db)
+        .await
+        .expect("Insertion to the Data base failed.");
+    Status::Ok
 }

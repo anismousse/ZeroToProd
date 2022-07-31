@@ -5,34 +5,23 @@ use rocket::figment::Figment;
 use rocket::{Build, Rocket};
 use std::net::TcpListener;
 
-use rocket_db_pools::{Database, Connection};
-use rocket_db_pools::sqlx::{self, Row};
+use rocket_db_pools::{sqlx, Database};
 
 #[derive(Database)]
 #[database("newsletter")]
-struct Subscriptions(sqlx::PgPool);
-
-
-#[get("/<id>")]
-async fn read(mut db: Connection<Subscriptions>, id: String) -> Option<String> {
-    format!("{}",&id);
-   sqlx::query("SELECT * FROM phonebook")
-       .fetch_one(&mut *db).await
-       .and_then(|r| Ok(r.try_get(0)?))
-       .ok()
-}
+pub struct Newsletter(sqlx::PgPool);
 
 pub fn startup(config: &Figment) -> Result<Rocket<Build>, std::io::Error> {
-    let server = rocket::custom(config)    
-    .mount("/", routes![health_check, subscriptions, read])
-    .attach(Subscriptions::init());
+    let server = rocket::custom(config)
+        .mount("/", routes![health_check, subscriptions])
+        .attach(Newsletter::init());
     Ok(server)
 }
 
 pub fn startup_default() -> Rocket<Build> {
     rocket::build()
-    .attach(Subscriptions::init())
-    .mount("/", routes![health_check, subscriptions, read])
+        .attach(Newsletter::init())
+        .mount("/", routes![health_check, subscriptions])
 }
 
 pub fn build_rocket_config(port_input: Option<u16>) -> Figment {
@@ -46,13 +35,14 @@ pub fn build_rocket_config(port_input: Option<u16>) -> Figment {
     };
 
     // Building configuration object for Rocket
-    rocket::Config::figment()
-    .merge(("port", port))
-    .merge(("newsletter", rocket_db_pools::Config {
-        url: dotenv!("DATABASE_URL").into(),
-        min_connections: None,
-        max_connections: 1024,
-        connect_timeout: 3,
-        idle_timeout: None,
-    }))
+    rocket::Config::figment().merge(("port", port)).merge((
+        "newsletter",
+        rocket_db_pools::Config {
+            url: dotenv!("DATABASE_URL").into(),
+            min_connections: None,
+            max_connections: 1024,
+            connect_timeout: 3,
+            idle_timeout: None,
+        },
+    ))
 }

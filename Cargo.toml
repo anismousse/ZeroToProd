@@ -38,11 +38,8 @@ features = [
   "migrate"
 ]
 
-
-
 [dev-dependencies]
 reqwest = "0.11"
-
 
 [lib]
 name = "zero2prod"

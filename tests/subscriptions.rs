@@ -40,12 +40,13 @@ async fn test_subscriptions_with_valid_form_data_rocket_test() {
     assert_eq!(response.await.status(), Status::Ok);
 
     // checks that the users is in the database
-    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
-        .fetch_one(&mut connection)
-        .await
-        .expect("Failed to fetch saved subscribers.");
+    let saved = sqlx::query!(
+        "SELECT email, name FROM subscriptions ",)
+    .fetch_one(&mut connection)
+    .await
+    .expect("Failed to fetch saved subscribers.");
 
-    assert_eq!(saved.email, "Akin Mousse");
+    assert_eq!(saved.name, "Akin Mousse");
     assert_eq!(saved.email, "anismousse@gmail.com");
 }
 

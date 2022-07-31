@@ -24,7 +24,7 @@ async fn test_subscriptions_with_valid_form_data_rocket_test() {
     let client = spawn_rocket_client(&configuration);
     // launch connection to the data base
     let connection_string = configuration.database.connection_string();
-    print!("{}", &connection_string);
+
     let mut connection = PgConnection::connect(&connection_string)
         .await
         .expect("Failed to connect to the data base.");

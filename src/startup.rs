@@ -24,7 +24,7 @@ pub fn startup_default() -> Rocket<Build> {
         .mount("/", routes![health_check, subscriptions])
 }
 
-pub fn build_rocket_config(port_input: Option<u16>) -> Figment {
+pub fn build_rocket_config(port_input: Option<u16>, db_url: Option<String>) -> Figment {
     // Get available port
     let port = match port_input {
         Some(value) => value,
@@ -34,11 +34,17 @@ pub fn build_rocket_config(port_input: Option<u16>) -> Figment {
         },
     };
 
+    // Get DB url if one is provided. If not extract it from the ENV variables.
+    let url = match db_url {
+        Some(value) => value,
+        None => dotenv!("DATABASE_URL").into(),
+    };
+
     // Building configuration object for Rocket
     rocket::Config::figment().merge(("port", port)).merge((
-        "newsletter",
+        "databases.newsletter",
         rocket_db_pools::Config {
-            url: dotenv!("DATABASE_URL").into(),
+            url,
             min_connections: None,
             max_connections: 1024,
             connect_timeout: 3,

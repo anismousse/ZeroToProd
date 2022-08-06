@@ -46,6 +46,6 @@ pub async fn subscriptions(
     sqlx::query(&sql_query)
         .execute(&mut *db)
         .await
-        .expect("Insertion to the Data base failed.");
+        .expect("Insertion to the Database failed.");
     Status::Ok
 }

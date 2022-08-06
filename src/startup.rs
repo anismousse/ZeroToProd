@@ -18,12 +18,6 @@ pub fn startup(config: &Figment) -> Result<Rocket<Build>, std::io::Error> {
     Ok(server)
 }
 
-pub fn startup_default() -> Rocket<Build> {
-    rocket::build()
-        .attach(Newsletter::init())
-        .mount("/", routes![health_check, subscriptions])
-}
-
 pub fn build_rocket_config(port_input: Option<u16>, db_url: Option<String>) -> Figment {
     // Get available port
     let port = match port_input {

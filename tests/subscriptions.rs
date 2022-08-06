@@ -1,36 +1,15 @@
-use std::vec;
+// use std::vec;
 
 use rocket::http::ContentType;
 use rocket::http::Status;
-use rocket::local::asynchronous::Client;
-use sqlx::{Connection, PgConnection};
-use zero2prod::configuration::get_configuration;
-use zero2prod::configuration::Settings;
-use zero2prod::startup::{build_rocket_config, startup};
+mod common;
 
-async fn spawn_rocket_client(configuration: &Settings) -> Client {
-    // Building configuration object for Rocket
-    let config = build_rocket_config(Some(configuration.application_port));
-
-    Client::tracked(startup(&config).unwrap()).await.unwrap()
-}
-
-//#[rocket::tokio::test]
 #[tokio::test]
-async fn test_subscriptions_with_valid_form_data_rocket_test() {
-    // Get configuration
-    let configuration = get_configuration().expect("Fail to load the configuration");
-    // launch rocket client
-    let client = spawn_rocket_client(&configuration);
-    // launch connection to the data base
-    let connection_string = configuration.database.connection_string();
-
-    let mut connection = PgConnection::connect(&connection_string)
-        .await
-        .expect("Failed to connect to the data base.");
+async fn test_subscriptions_with_correct_form_data() {
+    let test_app = common::spawn_rocket_client().await;
 
     let body = "name=Akin%20Mousse&email=anismousse%40gmail.com";
-    let cl = client.await;
+    let cl = test_app.client;
     let response = cl
         .post("/subscriptions")
         .header(ContentType::Form)
@@ -40,30 +19,30 @@ async fn test_subscriptions_with_valid_form_data_rocket_test() {
     assert_eq!(response.await.status(), Status::Ok);
 
     // checks that the users is in the database
-    let saved = sqlx::query!(
-        "SELECT email, name FROM subscriptions ",)
-    .fetch_one(&mut connection)
-    .await
-    .expect("Failed to fetch saved subscribers.");
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions;")
+        .fetch_one(&test_app.bd_pool)
+        .await
+        .expect("Failed to fetch saved subscribers.");
 
     assert_eq!(saved.name, "Akin Mousse");
     assert_eq!(saved.email, "anismousse@gmail.com");
+    let _ = cl.terminate().await;
+    common::delete_test_data_base(test_app.configuration).await;
 }
 
 #[tokio::test]
-async fn test_subscriptions_with_invalid_form_data_rocket_test() {
-    let configuration = get_configuration().expect("Fail to load the configuration");
-    let client = spawn_rocket_client(&configuration);
-    let cl = client.await;
+async fn test_subscriptions_with_incorrect_form_data() {
+    let test_app = common::spawn_rocket_client().await;
+    let client = test_app.client;
     let test_cases = vec![
-        ("missing email", "name=Akin%20Mousse"),
+        ("missing email", "name=Anis%20Mousse"),
         ("missing name", "email=anismousse%40gmail.com"),
         ("missing name and email", ""),
         ("an incorrect email", "email=anismousse%40gm%40gmail.com"),
     ];
 
     for (err_msg, incorrect_body) in test_cases {
-        let response = cl
+        let response = client
             .post("/subscriptions")
             .header(ContentType::Form)
             .body(&incorrect_body)
@@ -76,4 +55,6 @@ async fn test_subscriptions_with_invalid_form_data_rocket_test() {
             err_msg
         );
     }
+    let _ = client.terminate().await;
+    common::delete_test_data_base(test_app.configuration).await;
 }

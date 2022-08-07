@@ -1,8 +1,7 @@
 use sqlx::Executor;
 use sqlx::{Connection, PgConnection, PgPool};
-
+use once_cell::sync::Lazy;
 use rocket::local::asynchronous::Client;
-
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, Settings};
 use zero2prod::startup::{build_rocket_config, startup};
@@ -14,10 +13,17 @@ pub struct TestApp {
     pub configuration: Settings,
 }
 
-pub async fn spawn_rocket_client() -> TestApp {
-    // setting up tracing
+// Ensure that the `tracing` stack is only initialized once using `once_cell`
+static TRACING: Lazy<()> = Lazy::new(|| {
     let subscriber = get_subscriber("test".into(), "debug".into());
     init_subscriber(subscriber);
+});
+
+pub async fn spawn_rocket_client() -> TestApp {
+    // Setting up tracing
+    // The first time `initialize` is invoked the code in `TRACING` is executed.
+    // All other invocations will instead skip execution.
+    Lazy::force(&TRACING);
 
     // Get configuration
     let mut configuration = get_configuration().expect("Fail to load the configuration");

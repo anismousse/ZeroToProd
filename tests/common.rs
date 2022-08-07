@@ -6,6 +6,7 @@ use rocket::local::asynchronous::Client;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, Settings};
 use zero2prod::startup::{build_rocket_config, startup};
+use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 pub struct TestApp {
     pub client: Client,
@@ -14,6 +15,10 @@ pub struct TestApp {
 }
 
 pub async fn spawn_rocket_client() -> TestApp {
+    // setting up tracing
+    let subscriber = get_subscriber("test".into(), "debug".into());
+    init_subscriber(subscriber);
+
     // Get configuration
     let mut configuration = get_configuration().expect("Fail to load the configuration");
 

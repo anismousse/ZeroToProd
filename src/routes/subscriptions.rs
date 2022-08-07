@@ -43,7 +43,7 @@ pub async fn subscriptions(
         %request_id,
         subscriber_email = %subscriber.email,
         subscriber_name= %subscriber.name
-        );
+    );
     let _request_span_guard = request_span.enter();
     let query_span = tracing::info_span!("Saving new subscriber details in the database");
 
@@ -62,9 +62,7 @@ pub async fn subscriptions(
         .instrument(query_span)
         .await
     {
-        Ok(_) => {
-            Status::Ok
-        }
+        Ok(_) => Status::Ok,
         Err(e) => {
             tracing::error!("Failed to execute the query: {:?}", e);
             Status::InternalServerError

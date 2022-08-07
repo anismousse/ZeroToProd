@@ -15,8 +15,15 @@ pub struct TestApp {
 
 // Ensure that the `tracing` stack is only initialized once using `once_cell`
 static TRACING: Lazy<()> = Lazy::new(|| {
-    let subscriber = get_subscriber("test".into(), "debug".into());
-    init_subscriber(subscriber);
+    let subscriber_name = "test".into();
+    let filter_level = "debug".into();
+    if std::env::var("TEST_LOG").is_ok() {   
+        let subscriber = get_subscriber(subscriber_name, filter_level, std::io::stdout);
+        init_subscriber(subscriber);
+    } else {        
+        let subscriber = get_subscriber(subscriber_name, filter_level, std::io::sink);
+        init_subscriber(subscriber);
+    };
 });
 
 pub async fn spawn_rocket_client() -> TestApp {

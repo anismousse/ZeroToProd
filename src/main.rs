@@ -6,7 +6,7 @@ use zero2prod::telemetry::{get_subscriber, init_subscriber};
 #[rocket::main]
 #[allow(unused_must_use)]
 async fn main() {
-    let subscriber = get_subscriber("zero2prod".into(), "info".into());
+    let subscriber = get_subscriber("zero2prod".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
     let configuration = get_configuration().expect("Fail to load the configuration");
     

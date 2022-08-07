@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 use crate::startup::Newsletter;
 
+use tracing::Instrument;
+
 #[derive(FromForm)]
 pub struct Subscriber<'r> {
     #[field(validate = omits("no"))]
@@ -33,6 +35,18 @@ pub async fn subscriptions(
     mut db: Connection<Newsletter>,
     subscriber: Form<Subscriber<'_>>,
 ) -> Status {
+    let request_id = Uuid::new_v4();
+
+    // create span for tracing purpose.
+    let request_span = tracing::info_span!(
+        "Adding a new subscriber.",
+        %request_id,
+        subscriber_email = %subscriber.email,
+        subscriber_name= %subscriber.name
+        );
+    let _request_span_guard = request_span.enter();
+    let query_span = tracing::info_span!("Saving new subscriber details in the database");
+
     let sql_query = format!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -43,9 +57,17 @@ pub async fn subscriptions(
         subscriber.name,
         Utc::now()
     );
-    sqlx::query(&sql_query)
+    match sqlx::query(&sql_query)
         .execute(&mut *db)
+        .instrument(query_span)
         .await
-        .expect("Insertion to the Database failed.");
-    Status::Ok
+    {
+        Ok(_) => {
+            Status::Ok
+        }
+        Err(e) => {
+            tracing::error!("Failed to execute the query: {:?}", e);
+            Status::InternalServerError
+        }
+    }
 }

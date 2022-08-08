@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::startup::Newsletter;
 
-use tracing::Instrument;
+use tracing::{self};
 
 #[derive(FromForm)]
 pub struct Subscriber<'r> {
@@ -30,23 +30,28 @@ fn validate_email<'v>(email: &str) -> form::Result<'v, ()> {
     Ok(())
 }
 
+#[tracing::instrument(
+    name = "Adding a new subscriber",
+    skip(subscriber, db),
+    fields(
+    request_id = %Uuid::new_v4(),
+    subscriber_email = %subscriber.email,
+    subscriber_name= %subscriber.name
+    )
+)]
 #[post("/subscriptions", data = "<subscriber>")]
-pub async fn subscriptions(
+pub async fn subscriptions(db: Connection<Newsletter>, subscriber: Form<Subscriber<'_>>) -> Status {
+    match insert_subscriptions(db, subscriber).await {
+        Ok(_) => Status::Ok,
+        Err(_) => Status::InternalServerError,
+    }
+}
+
+#[tracing::instrument(name = "Saving a new subscriber", skip(subscriber, db))]
+pub async fn insert_subscriptions(
     mut db: Connection<Newsletter>,
     subscriber: Form<Subscriber<'_>>,
-) -> Status {
-    let request_id = Uuid::new_v4();
-
-    // create span for tracing purpose.
-    let request_span = tracing::info_span!(
-        "Adding a new subscriber.",
-        %request_id,
-        subscriber_email = %subscriber.email,
-        subscriber_name= %subscriber.name
-    );
-    let _request_span_guard = request_span.enter();
-    let query_span = tracing::info_span!("Saving new subscriber details in the database");
-
+) -> Result<(), sqlx::Error> {
     let sql_query = format!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -57,15 +62,13 @@ pub async fn subscriptions(
         subscriber.name,
         Utc::now()
     );
-    match sqlx::query(&sql_query)
+    sqlx::query(&sql_query)
         .execute(&mut *db)
-        .instrument(query_span)
+        // .instrument(query_span)
         .await
-    {
-        Ok(_) => Status::Ok,
-        Err(e) => {
+        .map_err(|e| {
             tracing::error!("Failed to execute the query: {:?}", e);
-            Status::InternalServerError
-        }
-    }
+            e
+        })?;
+    Ok(())
 }

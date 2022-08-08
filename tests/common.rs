@@ -1,7 +1,7 @@
-use sqlx::Executor;
-use sqlx::{Connection, PgConnection, PgPool};
 use once_cell::sync::Lazy;
 use rocket::local::asynchronous::Client;
+use sqlx::Executor;
+use sqlx::{Connection, PgConnection, PgPool};
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, Settings};
 use zero2prod::startup::{build_rocket_config, startup};
@@ -17,10 +17,10 @@ pub struct TestApp {
 static TRACING: Lazy<()> = Lazy::new(|| {
     let subscriber_name = "test".into();
     let filter_level = "debug".into();
-    if std::env::var("TEST_LOG").is_ok() {   
+    if std::env::var("TEST_LOG").is_ok() {
         let subscriber = get_subscriber(subscriber_name, filter_level, std::io::stdout);
         init_subscriber(subscriber);
-    } else {        
+    } else {
         let subscriber = get_subscriber(subscriber_name, filter_level, std::io::sink);
         init_subscriber(subscriber);
     };

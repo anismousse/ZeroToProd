@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 use crate::startup::Newsletter;
 
+use tracing::{self};
+
 #[derive(FromForm)]
 pub struct Subscriber<'r> {
     #[field(validate = omits("no"))]
@@ -28,11 +30,28 @@ fn validate_email<'v>(email: &str) -> form::Result<'v, ()> {
     Ok(())
 }
 
+#[tracing::instrument(
+    name = "Adding a new subscriber",
+    skip(subscriber, db),
+    fields(
+    request_id = %Uuid::new_v4(),
+    subscriber_email = %subscriber.email,
+    subscriber_name= %subscriber.name
+    )
+)]
 #[post("/subscriptions", data = "<subscriber>")]
-pub async fn subscriptions(
+pub async fn subscriptions(db: Connection<Newsletter>, subscriber: Form<Subscriber<'_>>) -> Status {
+    match insert_subscriptions(db, subscriber).await {
+        Ok(_) => Status::Ok,
+        Err(_) => Status::InternalServerError,
+    }
+}
+
+#[tracing::instrument(name = "Saving a new subscriber", skip(subscriber, db))]
+pub async fn insert_subscriptions(
     mut db: Connection<Newsletter>,
     subscriber: Form<Subscriber<'_>>,
-) -> Status {
+) -> Result<(), sqlx::Error> {
     let sql_query = format!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -45,7 +64,11 @@ pub async fn subscriptions(
     );
     sqlx::query(&sql_query)
         .execute(&mut *db)
+        // .instrument(query_span)
         .await
-        .expect("Insertion to the Database failed.");
-    Status::Ok
+        .map_err(|e| {
+            tracing::error!("Failed to execute the query: {:?}", e);
+            e
+        })?;
+    Ok(())
 }

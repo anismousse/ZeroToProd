@@ -1,11 +1,11 @@
+use once_cell::sync::Lazy;
+use rocket::local::asynchronous::Client;
 use sqlx::Executor;
 use sqlx::{Connection, PgConnection, PgPool};
-
-use rocket::local::asynchronous::Client;
-
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, Settings};
 use zero2prod::startup::{build_rocket_config, startup};
+use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 pub struct TestApp {
     pub client: Client,
@@ -13,7 +13,25 @@ pub struct TestApp {
     pub configuration: Settings,
 }
 
+// Ensure that the `tracing` stack is only initialized once using `once_cell`
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let subscriber_name = "test".into();
+    let filter_level = "debug".into();
+    if std::env::var("TEST_LOG").is_ok() {
+        let subscriber = get_subscriber(subscriber_name, filter_level, std::io::stdout);
+        init_subscriber(subscriber);
+    } else {
+        let subscriber = get_subscriber(subscriber_name, filter_level, std::io::sink);
+        init_subscriber(subscriber);
+    };
+});
+
 pub async fn spawn_rocket_client() -> TestApp {
+    // Setting up tracing
+    // The first time `initialize` is invoked the code in `TRACING` is executed.
+    // All other invocations will instead skip execution.
+    Lazy::force(&TRACING);
+
     // Get configuration
     let mut configuration = get_configuration().expect("Fail to load the configuration");
 

@@ -42,7 +42,7 @@ pub async fn spawn_rocket_client() -> TestApp {
 
     // Building Rocket's config object.
     let config = build_rocket_config(
-        Some(configuration.application_port),
+        &configuration.application,
         Some(configuration.database.connection_string()),
     );
 

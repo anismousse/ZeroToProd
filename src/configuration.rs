@@ -1,5 +1,5 @@
 use secrecy::{ExposeSecret, Secret};
-use serde::Deserialize;
+use serde::{Deserialize};
 
 #[derive(Deserialize)]
 pub struct Settings {
@@ -22,9 +22,51 @@ pub struct ApplicationSettings {
     pub host: String,
 }
 
+pub enum Environment {
+    Local,
+    Production
+}
+
+
+
+impl TryFrom<String> for Environment{
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error>{
+        match value.to_lowercase().as_str().trim() {
+            "local" => Ok(Self::Local),
+            "production" => Ok(Self::Production),
+            other => Err(format!("{} is not supported environment. PLease use 'local' or 'production'.", other))
+        }
+    }
+}
+
+impl Environment {
+    pub fn as_str(&self) -> &'static str{
+        match self {
+            Environment::Local => "local",
+            Environment::Production => "production",
+        }
+    }
+}
+
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+    // access to the configuration folder
+    let base_path = std::env::current_dir().expect("Failed to identify the current directory.");
+    let configuration_folder = base_path.join("configuration");
+
+    // Identify the current environment. Default is 'local'
+    let environment: Environment = std::env::var("APP_ENV")
+        .unwrap_or("local".into())
+        .try_into()
+        .expect("Failed to parse 'APP_ENV'.");
+
+    // create configuration file name based on the current environment
+    let config_filename = format!("{}.yaml", environment.as_str());
+
     let settings = config::Config::builder()
-        .add_source(config::File::with_name("configuration.yaml"))
+        .add_source(config::File::from(configuration_folder.join("base.yaml")))
+        .add_source(config::File::from(configuration_folder.join(&config_filename)))
         .build()?;
     settings.try_deserialize::<Settings>()
 }

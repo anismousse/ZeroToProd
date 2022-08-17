@@ -19,7 +19,6 @@ pub fn startup(config: &Figment) -> Result<Rocket<Build>, std::io::Error> {
 }
 
 pub fn build_rocket_config(app_settings: &ApplicationSettings, db_url: Option<String>) -> Figment {
-
     // Get DB url if one is provided. If not extract it from the ENV variables.
     let url = match db_url {
         Some(value) => value,

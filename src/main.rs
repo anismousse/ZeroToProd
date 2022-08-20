@@ -12,7 +12,7 @@ async fn main() {
 
     // Building configuration object for Rocket
     let config = build_rocket_config(
-        Some(configuration.application_port),
+        &configuration.application,
         Some(configuration.database.connection_string()),
     );
 

@@ -64,12 +64,13 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
     // create configuration file name based on the current environment
     let config_filename = format!("{}.yaml", environment.as_str());
-
+    
     let settings = config::Config::builder()
         .add_source(config::File::from(configuration_folder.join("base.yaml")))
         .add_source(config::File::from(
             configuration_folder.join(&config_filename),
         ))
+        .add_source(config::Environment::with_prefix("app").separator("__"))
         .build()?;
     settings.try_deserialize::<Settings>()
 }

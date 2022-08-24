@@ -26,7 +26,7 @@ pub fn build_rocket_config(app_settings: &ApplicationSettings, db_url: Option<St
     };
 
     // Get the port number to listen on. (Heroku)
-    let port:u16 = std::env::var("PORT")
+    let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| app_settings.port.to_string())
         .parse()
         .expect("PORT must be a number");

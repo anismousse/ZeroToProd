@@ -38,6 +38,7 @@ pub async fn spawn_rocket_client() -> TestApp {
     // Update the database configuration to use the test database
     configuration.database.database_name = format!("TEST_DB_{}", Uuid::new_v4().to_string());
 
+    // build data base and execute migration.
     let connection_pool = configure_data_base(&configuration).await;
 
     // Building Rocket's config object.

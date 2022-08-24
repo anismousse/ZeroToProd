@@ -25,10 +25,16 @@ pub fn build_rocket_config(app_settings: &ApplicationSettings, db_url: Option<St
         None => dotenv!("DATABASE_URL").into(),
     };
 
+    // Get the port number to listen on. (Heroku)
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| app_settings.port.to_string())
+        .parse()
+        .expect("PORT must be a number");
+
     // Building configuration object for Rocket
     rocket::Config::figment()
         .merge(("address", app_settings.host.to_string()))
-        .merge(("port", app_settings.port))
+        .merge(("port", port))
         .merge((
             "databases.newsletter",
             rocket_db_pools::Config {

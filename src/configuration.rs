@@ -1,5 +1,7 @@
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
+use serde_aux::field_attributes::deserialize_number_from_string;
+
 
 #[derive(Deserialize)]
 pub struct Settings {
@@ -12,12 +14,14 @@ pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
     pub database_name: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
 }
 
 #[derive(Deserialize)]
 pub struct ApplicationSettings {
+    #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
 }
@@ -57,14 +61,14 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     let configuration_folder = base_path.join("configuration");
 
     // Identify the current environment. Default is 'local'
-    let environment: Environment = std::env::var("APP_ENV")
+    let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
         .expect("Failed to parse 'APP_ENV'.");
 
     // create configuration file name based on the current environment
     let config_filename = format!("{}.yaml", environment.as_str());
-    
+
     let settings = config::Config::builder()
         .add_source(config::File::from(configuration_folder.join("base.yaml")))
         .add_source(config::File::from(
